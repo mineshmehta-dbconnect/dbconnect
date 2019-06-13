@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd ">
+    <http:listener-config name="dbcontact-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="${https.port}" protocol="HTTPS" tlsContext="dbcontact-tls-config"/>
+    </http:listener-config>
+    <apikit:config name="dbcontact-config" raml="dbcontact.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="dbcontact-main">
+        <http:listener config-ref="dbcontact-httpListenerConfig" path="/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+				<http:body ><![CDATA[#[output application/json --- payload]]]></http:body>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+            </http:error-response>
+        </http:listener>
+		<apikit:router config-ref="dbcontact-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="dbcontact-console">
+        <http:listener config-ref="dbcontact-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="dbcontact-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\v1\contacts\(contactId)\address\(contactAddressId):dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="20a7ee2a-9940-4c87-be2d-73b9e055089e">
+            <ee:variables>
+                <ee:set-variable variableName="contactId"><![CDATA[attributes.uriParams.contactId]]></ee:set-variable>
+                <ee:set-variable variableName="contactAddressId"><![CDATA[attributes.uriParams.contactAddressId]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-address-update-impl" doc:id="c0969ba0-8156-4b82-9d0f-18af712fe581" name="contact-address-update-impl"/>
+    </flow>
+    <flow name="put:\v1\contacts\(contactId)\communication\(contactCommunicationId):dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="contactId">attributes.uriParams.contactId</ee:set-variable>
+                <ee:set-variable variableName="contactCommunicationId">attributes.uriParams.contactCommunicationId</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-cummnication-update-impl" doc:id="d4533e7e-0b76-4918-94f4-0f0ca68b63a9" name="contact-cummnication-update-impl"/>
+    </flow>
+    <flow name="put:\v1\contacts\(contactId):dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="cd41b46f-48be-46fc-a644-3d2f6d910b88">
+            <ee:variables>
+                <ee:set-variable variableName="contactId"><![CDATA[attributes.uriParams.contactId]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-update-impl" doc:id="8962f7a0-257a-4852-934e-c5f262659f89" name="contact-update-impl"/>
+    </flow>
+    <flow name="delete:\v1\contacts\(contactId)\address\(contactAddressId):dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="adddc37c-10a4-4002-8ea2-ba1cb9879df2">
+            <ee:variables>
+                <ee:set-variable variableName="contactId"><![CDATA[attributes.uriParams.contactId]]></ee:set-variable>
+                <ee:set-variable variableName="contactAddressId"><![CDATA[attributes.uriParams.contactAddressId]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-address-delete-impl" doc:id="c38492cc-0244-4356-a1d1-b47fa76900f1" name="contact-address-delete-impl"/>
+    </flow>
+    <flow name="delete:\v1\contacts\(contactId)\communication\(contactCommunicationId):dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="5ce673b9-728a-423a-89c7-afb3b4f00cbe">
+            <ee:variables>
+                <ee:set-variable variableName="contactId"><![CDATA[attributes.uriParams.contactId]]></ee:set-variable>
+                <ee:set-variable variableName="contactCommunicationId"><![CDATA[attributes.uriParams.contactCommunicationId]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-cummnication-delete-impl" doc:id="fe31122f-40f3-4059-92ab-88363825dee7" name="contact-cummnication-delete-impl"/>
+    </flow>
+    <flow name="delete:\v1\contacts\(contactId):dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="9dbdded4-e754-4dd5-8acd-2ac3a7f1c85d">
+            <ee:variables>
+                <ee:set-variable variableName="contactId"><![CDATA[attributes.uriParams.contactId]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-delete-impl" doc:id="a482f6b2-656a-4f8a-a031-fca2dc5ef36d" name="contact-delete-impl"/>
+    </flow>
+    <flow name="get:\v1\contacts\(contactId)\address:dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="70f6d7c7-ce84-4c79-b1a5-6394dec3d1df">
+            <ee:variables>
+                <ee:set-variable variableName="contactId"><![CDATA[attributes.uriParams.contactId]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-address-select-all-impl" doc:id="7377e068-7b10-4458-9a44-4b06cc7d7692" name="contact-address-select-all-impl"/>
+    </flow>
+    <flow name="get:\v1\contacts\(contactId)\communication:dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="c9c5cf05-7387-46e4-8ee8-b11989e58626">
+            <ee:variables>
+                <ee:set-variable variableName="contactId"><![CDATA[attributes.uriParams.contactId]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-cummnication-select-all-impl" doc:id="6ac40874-4865-4600-8228-40c415981d51" name="contact-cummnication-select-all-impl"/>
+    </flow>
+    <flow name="get:\v1\contacts:dbcontact-config">
+        <flow-ref doc:name="contact-select-all-impl" doc:id="66ec36c0-5856-433b-8328-bfe7ac5399cd" name="contact-select-all-impl"/>
+    </flow>
+    <flow name="get:\v1\contacts\(contactId)\address\(contactAddressId):dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="contactId">attributes.uriParams.contactId</ee:set-variable>
+                <ee:set-variable variableName="contactAddressId">attributes.uriParams.contactAddressId</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-address-select-impl" doc:id="4be0cdb9-d633-413e-8956-b3ba3fb96d19" name="contact-address-select-impl"/>
+    </flow>
+    <flow name="get:\v1\contacts\(contactId)\communication\(contactCommunicationId):dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="4128faa4-ffed-4355-9c4e-999ce8217ff9">
+            <ee:variables>
+                <ee:set-variable variableName="contactId"><![CDATA[attributes.uriParams.contactId]]></ee:set-variable>
+                <ee:set-variable variableName="contactCommunicationId"><![CDATA[attributes.uriParams.contactCommunicationId]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-cummnication-select-impl" doc:id="0953970a-9265-4727-bd67-a9f308b08d06" name="contact-cummnication-select-impl"/>
+    </flow>
+    <flow name="get:\v1\contacts\(contactId):dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="contactId">attributes.uriParams.contactId</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-select-impl" doc:id="8cfe279c-cd67-4dfa-a107-f66d49586165" name="contact-select-impl"/>
+    </flow>
+    <flow name="post:\v1\contacts\(contactId)\address:application\json:dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="contactId">attributes.uriParams.contactId</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-address-create-impl" doc:id="dc6f6e6c-d0de-4faf-b2cb-e19726ea5569" name="contact-address-create-impl"/>
+    </flow>
+    <flow name="post:\v1\contacts\(contactId)\communication:application\json:dbcontact-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="contactId">attributes.uriParams.contactId</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="contact-cummnication-create-impl" doc:id="bcce5e76-1757-4f67-a2b3-62cc13a1ae7b" name="contact-cummnication-create-impl"/>
+    </flow>
+    <flow name="post:\v1\contacts:application\json:dbcontact-config">
+		<flow-ref doc:name="contact-create-impl" doc:id="5a2af4e6-8576-421e-bbe4-a1c2ccf66097" name="contact-create-impl"/>
+    </flow>
+</mule>

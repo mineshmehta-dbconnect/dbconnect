@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	
+
+	<flow name="contact-select-all-impl" doc:id="d4158ec5-a6f7-4053-8606-eb71f2b934da" >
+	<logger level="DEBUG" doc:name="start logger" doc:id="52d9e015-5e4f-4815-a8c5-4cecf91d8312" message="contact-select-all-impl start"/>
+	<flow-ref doc:name="db-contact-select-all" doc:id="f5a074e2-e0c0-426d-9f45-62f16cbab23b" name="db-contact-select-all"/>
+		<logger level="DEBUG" doc:name="end logger" doc:id="5104d487-78b1-47de-b5e6-60bc59644305" message="contact-select-all-impl start"/>
+
+	<error-handler name="response-error-handler" doc:id="ba51517e-4391-4102-8261-da90e03ada4e" >
+		<on-error-continue enableNotifications="false" logException="false" doc:name="return error message" doc:id="1305ef4f-c13d-4be4-8749-908da3d36f86">
+				<flow-ref doc:name="common-error" doc:id="d6761354-97ce-445e-9842-5f1b293a776f" name="common-error" />
+
+			</on-error-continue>
+	</error-handler>
+
+</flow>
+
+	<flow name="contact-select-impl" doc:id="ab59613f-19d0-46e0-a113-5b806e4cc617" >
+	<logger level="DEBUG" doc:name="start logger" doc:id="11f421f4-f3d2-4873-b641-5a4e602ff4f5" message="contact-select-impl start"/>
+	<flow-ref doc:name="db-contact-select" doc:id="8f1bde67-4cff-4267-9c19-0a8b39a78f01" name="db-contact-select"/>
+		<choice doc:name="is present" doc:id="af245e31-b161-4970-81f0-0c49d0da0e9b" >
+			<when expression="#[0 == sizeOf(payload)]">
+				<set-variable value="404" doc:name="status 404" doc:id="cac7ec39-0371-4e3e-8416-7dabf00a892d" variableName="httpStatus"/>
+				<set-payload value='#[output application/json --- { "message" : "Resource not found"}]' doc:name="error message" doc:id="76438998-560d-4e6d-a813-6601e43cc646" />
+			</when>
+			<otherwise >
+				<set-payload value="#[payload[0]]" doc:name="get record" doc:id="05f42129-9254-4ce0-b924-5d5107648d34" />
+			</otherwise>
+		
+</choice>
+		<logger level="DEBUG" doc:name="end logger" doc:id="1bc3a5b3-0a0d-4c66-9d0a-ce4cd1aecfef" message="contact-select-impl end"/>
+	<error-handler name="response-error-handler" doc:id="ed4f98ac-2b78-4c81-bd55-e1d6119372db" >
+		<on-error-continue enableNotifications="false" logException="false" doc:name="return error message" doc:id="e3ef0d45-6385-4a6c-a10a-4a0c744c9cd8">
+			<flow-ref doc:name="common-error" doc:id="ecee9e5f-00cb-4938-b5e0-a4fc18f43e8b" name="common-error" />
+		</on-error-continue>
+	</error-handler>
+
+</flow>
+
+
+
+	<flow name="contact-create-impl" doc:id="ddf98788-e343-4595-80a0-8d872fdf1598" >
+	<logger level="DEBUG" doc:name="start logger" doc:id="76e2cdf2-e35e-4806-933c-2cad6bc16b8c" message="contact-create-impl start"/>
+	<flow-ref doc:name="db-contact-create" doc:id="91ca9b9f-e3cf-467b-aab8-6b42940cb798" name="db-contact-create" targetValue="#[payload.generatedKeys.GENERATED_KEY]" target="newKey"/>
+		<ee:transform doc:name="set entity" doc:id="060ed908-b425-464b-82e0-ebb51ddabc91" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ++ 
+{
+	id : vars.newKey
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="DEBUG" doc:name="end logger" doc:id="bda37eb5-98d3-4594-90a5-69af09a3edd8" message="contact-insert-impl end"/>
+
+	<error-handler name="response-error-handler" doc:id="d4e04fe1-d840-466e-b041-c2f492d50d39" >
+		<on-error-continue enableNotifications="false" logException="false" doc:name="return error message" doc:id="4f614f5c-cd84-4e4e-bc64-83f9b779282f">
+				<flow-ref doc:name="common-error" doc:id="214b4fa9-239b-430d-97ed-4fef9f71911e" name="common-error" />
+
+			</on-error-continue>
+	</error-handler>
+
+</flow>
+
+	<flow name="contact-update-impl" doc:id="b894e578-6832-4401-ab73-3a35aab86b74" >
+	<logger level="DEBUG" doc:name="start logger" doc:id="560cbd55-1f04-4823-8a5a-afc4a826dbd2" message="contact-update-impl start"/>
+	<flow-ref doc:name="db-contact-update" doc:id="c0718dc2-8923-48ad-98db-503484bed92a" name="db-contact-update"/>
+		<choice doc:name="is updated" doc:id="d6642982-cb7d-42ba-8fff-ac4a109de877" >
+			<when expression="#[0 == payload.affectedRows]">
+				<set-variable value="404" doc:name="status 404" doc:id="6e1b94e2-fa45-49cb-ad3b-bd3b0201dbac" variableName="httpStatus"/>
+				<set-payload value='#[output application/json --- { "message" : "Resource not found"}]' doc:name="error message" doc:id="77382cd4-64d7-4e99-855c-18cb6e6225c4" />
+			</when>
+		</choice>
+		<logger level="DEBUG" doc:name="end logger" doc:id="387b8266-26a9-41eb-9a5d-a6e351629962" message="contact-update-impl end"/>
+
+	<error-handler name="response-error-handler" doc:id="85c8a151-0fe7-4a9c-ba4b-3ec28b29a2c8" >
+		<on-error-continue enableNotifications="false" logException="false" doc:name="return error message" doc:id="10c5a5bc-acdc-4aa3-b45b-b8383b2812d6">
+				<flow-ref doc:name="common-error" doc:id="0a83c17f-4dd3-4f0a-b30e-bfb68af8ff6a" name="common-error" />
+
+			</on-error-continue>
+	</error-handler>
+
+</flow>
+
+	<flow name="contact-delete-impl" doc:id="fc4e6be3-64a0-475e-b8b0-7c7342588c6e" >
+	<logger level="DEBUG" doc:name="start logger" doc:id="217eec50-fe48-4255-bd63-8e3b8e61d7df" message="contact-delete-impl start"/>
+	<flow-ref doc:name="db-contact-delete" doc:id="3e0f53f0-6c31-4b2b-a88a-5a87939bb671" name="db-contact-delete"/>
+		<choice doc:name="is deleted" doc:id="fa83b61c-746f-4ef8-a171-b544d312888a" >
+			<when expression="#[0 == payload]">
+				<set-variable value="404" doc:name="status 404" doc:id="a1648d94-e0be-4240-954b-004710263e71" variableName="httpStatus"/>
+				<set-payload value='#[output application/json --- { "message" : "Resource not found"}]' doc:name="error message" doc:id="d429583f-ff80-4002-afa7-c63a5d78b47d" />
+			</when>
+		</choice>
+		<logger level="DEBUG" doc:name="end logger" doc:id="5533403a-d57c-4a30-85a7-710fc82444d0" message="contact-delete-impl end"/>
+
+	<error-handler name="response-error-handler" doc:id="89c87d77-6ed2-4f55-87ab-906db2234ab4" >
+		<on-error-continue enableNotifications="false" logException="false" doc:name="return error message" doc:id="caa6c428-aa49-4a3a-a75e-4649f6d76b6b">
+				<flow-ref doc:name="common-error" doc:id="8c248db9-0b18-44d7-93d3-bd12ac51465c" name="common-error" />
+
+			</on-error-continue>
+	</error-handler>
+
+</flow>
+
+	</mule>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="db-contact-select-all" doc:id="452b656b-435a-4031-ad40-7235c9902343" >
+		<logger level="DEBUG" doc:name="start logger" doc:id="bd23b2b1-802d-4984-bd24-3ade9babd470" message="db-contact-select-all start"/>
+		<db:select doc:name="select all contact" doc:id="c5327185-faa8-4b93-bf0e-703c03a00ae8" config-ref="contactdb-config">
+			<db:sql >SELECT `contact`.`id`,
+    `contact`.`firstName`,
+    `contact`.`lastName`,
+    `contact`.`title`,
+    `contact`.`gender`,
+DATE_FORMAT(`contact`.`dob`,'%Y-%m-%d') as dob
+FROM `contact`;</db:sql>
+		</db:select>
+		<logger level="DEBUG" doc:name="end logger" doc:id="38b8413c-34ac-483b-a9de-9fc331fe888c" message="db-contact-select-all end"/>
+	
+</flow>
+
+	<flow name="db-contact-select" doc:id="ebc4da09-b181-4962-bf1c-d8f4449bee7f" >
+		<logger level="DEBUG" doc:name="start logger" doc:id="3babf199-db37-4227-ad47-42b9ebf2a4e2" message="db-contact-select start"/>
+		<db:select doc:name="select contact" doc:id="e3ab1919-03c2-403d-8bcd-841834cde487" config-ref="contactdb-config">
+			<db:sql >SELECT `contact`.`id`,
+    `contact`.`firstName`,
+    `contact`.`lastName`,
+    `contact`.`title`,
+    `contact`.`gender`,
+    DATE_FORMAT(`contact`.`dob`,'%Y-%m-%d') as dob 
+FROM `contact`
+WHERE `contact`.`id` = :contactId;</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'contactId' : vars.contactId
+}]]]></db:input-parameters>
+		</db:select>
+		<logger level="DEBUG" doc:name="end logger" doc:id="90dd2010-2a7f-44f6-a3cb-381b6d79c86a" message="db-contact-select end"/>
+	
+</flow>
+
+	<flow name="db-contact-create" doc:id="93490c2b-9322-442d-a259-ae8016671557" >
+		<logger level="DEBUG" doc:name="start logger" doc:id="559a69f5-97fe-442e-b59c-e25c9a9697c0" message="db-contact-create start"/>
+		<db:insert doc:name="insert contact" doc:id="7c27bf1b-48c7-47d9-a2e2-dbcc1b9a539e" config-ref="contactdb-config" autoGenerateKeys="true">
+			<db:sql >INSERT INTO `contact` (`firstName`, `lastName`, `title`, `gender`, `dob`, `created`, `modified`, `createdBy`, `modifyBy`)
+VALUES (:firstName, :lastName, :title, :gender, :dob, sysdate(), sysdate(), 'muleApp', 'muleApp');</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'firstName': payload.firstName,
+'lastName': payload.lastName,
+'title': payload.title,
+'gender': payload.gender,
+'dob': payload.dob
+}]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names >
+				<db:auto-generated-keys-column-name value="id" />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+		<logger level="DEBUG" doc:name="end logger" doc:id="96695d53-9658-45bc-83fd-971f6f37381f" message="db-contact-create end"/>
+	
+</flow>
+
+
+	<flow name="db-contact-update" doc:id="50d092b3-49c4-46ab-818b-4f8a3d1a8520" >
+		<logger level="DEBUG" doc:name="start logger" doc:id="844e9a21-db9e-4ec9-a31c-2cebbffbf1fb" message="db-contact-update start"/>
+		<db:update doc:name="update contact" doc:id="52f0d741-358d-4058-9d51-4b5c3e52a0b5" config-ref="contactdb-config">
+			<db:sql >UPDATE  `contact` 
+set `firstName` = :firstName
+, `lastName` =  :lastName
+, `title` = :title
+, `gender` = :gender
+, `dob` = :dob
+, `modified` =  sysdate()
+, `modifyBy` = 'muleApp'
+where id = :contactId</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'firstName': payload.firstName,
+'lastName': payload.lastName,
+'title': payload.title,
+'gender': payload.gender,
+'dob': payload.dob,
+'contactId' : vars.contactId
+}]]]></db:input-parameters>
+		</db:update>
+		<logger level="DEBUG" doc:name="end logger" doc:id="6ad87ff8-768a-4e81-8728-7608f5a852d2" message="db-contact-update end"/>
+	
+</flow>
+
+
+	<flow name="db-contact-delete" doc:id="16254c1b-f23f-4115-89b5-a9a94535a25a" >
+		<logger level="DEBUG" doc:name="start logger" doc:id="e45e623a-d090-43db-86b2-9abf8f1d88b1" message="db-contact-delete start"/>
+		<db:delete doc:name="delete contact" doc:id="7a44091c-916b-4473-949d-832d6c7c2ac2" config-ref="contactdb-config">
+			<db:sql >DELETE FROM  `contact`  where id = :contactId </db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'contactId' : vars.contactId
+}]]]></db:input-parameters>
+		</db:delete>
+		<logger level="DEBUG" doc:name="end logger" doc:id="b63777d3-3d82-494d-b4b9-826aca050def" message="db-contact-delete end"/>
+	
+</flow>
+
+
+</mule>

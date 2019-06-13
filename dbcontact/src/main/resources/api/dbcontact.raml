@@ -1,0 +1,177 @@
+#%RAML 1.0 
+title: DB Contact System API
+version: v1.0.0
+baseUri: https://mins.com/contact
+types:
+  contact: !include dataType/contact.raml
+  contactAddress: !include dataType/contactAddress.raml
+  contactCommunication: !include dataType/contactCommunication.raml
+
+/v1/contacts:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: contact[]
+  post:
+    body:
+      application/json:
+        type: contact
+    responses:
+      201:
+        body:
+          application/json:
+            type: contact
+  /{contactId}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: contact
+        404:
+          body:
+            application/json:
+              type: object
+              example: |
+                {
+                  "message": "Resource not found"
+                }
+    put:
+      body:
+        application/json:
+          type: contact
+      responses:
+        204:
+        404:
+          body:
+            application/json:
+              type: object
+              example: |
+                {
+                  "message": "Resource not found"
+                }
+    delete:
+      responses:
+        204:
+        404:
+          body:
+            application/json:
+              type: object
+              example: |
+                {
+                  "message": "Resource not found"
+                }
+    /address:
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                type: contactAddress[]
+      post:
+        body:
+          application/json:
+            type: contactAddress
+        responses:
+          201:
+            body:
+              application/json:
+                type: contactAddress
+      /{contactAddressId}:
+        get:
+          responses:
+            200:
+              body:
+                application/json:
+                  type: contactAddress
+            404:
+              body:
+                application/json:
+                  type: object
+                  example: |
+                    {
+                      "message": "Resource not found"
+                    }
+        put:
+          body:
+            application/json:
+              type: contactAddress
+          responses:
+            204:
+            404:
+              body:
+                application/json:
+                  type: object
+                  example: |
+                    {
+                      "message": "Resource not found"
+                    }
+        delete:
+          responses:
+            204:
+            404:
+              body:
+                application/json:
+                  type: object
+                  example: |
+                    {
+                      "message": "Resource not found"
+                    }
+    /communication:
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                type: contactCommunication []
+      post:
+        body:
+          application/json:
+            type: contactCommunication
+        responses:
+          201:
+            body:
+              application/json:
+                type: contactCommunication
+      /{contactCommunicationId}:
+        get:
+          responses:
+            200:
+              body:
+                application/json:
+                  type: contactCommunication
+            404:
+              body:
+                application/json:
+                  type: object
+                  example: |
+                    {
+                      "message": "Resource not found"
+                    }
+        put:
+          body:
+            application/json:
+              type: contactCommunication
+          responses:
+            204:
+            404:
+              body:
+                application/json:
+                  type: object
+                  example: |
+                    {
+                      "message": "Resource not found"
+                    }
+        delete:
+          responses:
+            204:
+            404:
+              body:
+                application/json:
+                  type: object
+                  example: |
+                    {
+                      "message": "Resource not found"
+                    }

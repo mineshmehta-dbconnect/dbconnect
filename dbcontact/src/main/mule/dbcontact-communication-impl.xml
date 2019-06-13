@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	
+
+	<flow name="contact-cummnication-select-all-impl" doc:id="d4158ec5-a6f7-4053-8606-eb71f2b934da" >
+	<logger level="DEBUG" doc:name="start logger" doc:id="52d9e015-5e4f-4815-a8c5-4cecf91d8312" message="contact-cummnication-select-all-impl start"/>
+	<flow-ref doc:name="db-contact-cummnication-select-all" doc:id="f5a074e2-e0c0-426d-9f45-62f16cbab23b" name="db-contact-cummnication-select-all"/>
+		<choice doc:name="is present" doc:id="a63716d1-4083-49b5-b8cf-6cb89ca2dd3b" >
+			<when expression="#[0 == sizeOf(payload)]">
+				<set-variable value="404" doc:name="status 404" doc:id="1cfddb8f-3c69-49aa-b48a-047497d941ac" variableName="httpStatus"/>
+				<set-payload value='#[output application/json --- { "message" : "Resource not found"}]' doc:name="error message" doc:id="4a221740-96e2-4354-81ff-dfeee2ca8ff2" />
+			</when>
+		</choice>
+		<logger level="DEBUG" doc:name="end logger" doc:id="5104d487-78b1-47de-b5e6-60bc59644305" message="contact-cummnication-select-all-impl start"/>
+
+	<error-handler name="response-error-handler" doc:id="ba51517e-4391-4102-8261-da90e03ada4e" >
+		<on-error-continue enableNotifications="false" logException="false" doc:name="return error message" doc:id="1305ef4f-c13d-4be4-8749-908da3d36f86">
+				<flow-ref doc:name="common-error" doc:id="d6761354-97ce-445e-9842-5f1b293a776f" name="common-error" />
+
+			</on-error-continue>
+	</error-handler>
+
+</flow>
+	<flow name="contact-cummnication-select-impl" doc:id="85a130a4-7202-49e8-ba3b-9e0d646fab54" >
+	<logger level="DEBUG" doc:name="start logger" doc:id="d14f3cc0-5195-4f4c-b04d-fca1b80e32e8" message="contact-cummnication-select-impl start"/>
+	<flow-ref doc:name="db-contact-cummnication-select" doc:id="821be3a1-41ee-446b-bde7-823c665ed9a2" name="db-contact-cummnication-select"/>																								   
+		<choice doc:name="is present" doc:id="17218c17-3cc4-49b9-b302-67c2184ce4e4" >
+			<when expression="#[0 == sizeOf(payload)]">
+				<set-variable value="404" doc:name="status 404" doc:id="81f27a5c-156a-46c1-aea5-76a1352dcd2c" variableName="httpStatus"/>
+				<set-payload value='#[output application/json --- { "message" : "Resource not found"}]' doc:name="error message" doc:id="c4981c30-1316-439e-8e61-6fc59a58405d" />
+			</when>
+			<otherwise >
+				<set-payload value="#[payload[0]]" doc:name="Set Payload" doc:id="36b3934c-1d37-4b04-bce3-1a5eb415578d" />
+			</otherwise>
+		
+</choice>
+		<logger level="DEBUG" doc:name="end logger" doc:id="7f6f50f3-b038-481c-a68a-1484f81b0343" message="contact-select-Communication-impl end"/>
+	<error-handler name="response-error-handler" doc:id="914575d4-dd69-4f57-b57d-e03e11179384" >
+		<on-error-continue enableNotifications="false" logException="false" doc:name="return error message" doc:id="a3a25253-773e-4e59-9111-94f4a514d20a">
+			<flow-ref doc:name="common-error" doc:id="01ff956f-60f0-4999-a2f3-8c532aa99f0f" name="common-error" />
+		</on-error-continue>
+	</error-handler>
+
+</flow>
+
+
+	<flow name="contact-cummnication-create-impl" doc:id="ddf98788-e343-4595-80a0-8d872fdf1598" >
+	<logger level="DEBUG" doc:name="start logger" doc:id="76e2cdf2-e35e-4806-933c-2cad6bc16b8c" message="contact-cummnication-create-impl start"/>
+	<flow-ref doc:name="db-contact-cummnication-create" doc:id="91ca9b9f-e3cf-467b-aab8-6b42940cb798" name="db-contact-cummnication-create" targetValue="#[payload.generatedKeys.GENERATED_KEY]" target="newKey"/>
+		<ee:transform doc:name="set entity" doc:id="060ed908-b425-464b-82e0-ebb51ddabc91" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ++ 
+{
+	id : vars.newKey
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="DEBUG" doc:name="end logger" doc:id="bda37eb5-98d3-4594-90a5-69af09a3edd8" message="contact-cummnication-insert-impl end"/>
+
+	<error-handler name="response-error-handler" doc:id="d4e04fe1-d840-466e-b041-c2f492d50d39" >
+		<on-error-continue enableNotifications="false" logException="false" doc:name="return error message" doc:id="4f614f5c-cd84-4e4e-bc64-83f9b779282f">
+				<flow-ref doc:name="common-error" doc:id="214b4fa9-239b-430d-97ed-4fef9f71911e" name="common-error" />
+
+			</on-error-continue>
+	</error-handler>
+
+</flow>
+
+	<flow name="contact-cummnication-update-impl" doc:id="b894e578-6832-4401-ab73-3a35aab86b74" >
+	<logger level="DEBUG" doc:name="start logger" doc:id="560cbd55-1f04-4823-8a5a-afc4a826dbd2" message="contact-cummnication-update-impl start"/>
+	<flow-ref doc:name="db-contact-cummnication-update" doc:id="c0718dc2-8923-48ad-98db-503484bed92a" name="db-contact-cummnication-update"/>
+		<choice doc:name="is updated" doc:id="d6642982-cb7d-42ba-8fff-ac4a109de877" >
+			<when expression="#[0 == payload.affectedRows]">
+				<set-variable value="404" doc:name="status 404" doc:id="6e1b94e2-fa45-49cb-ad3b-bd3b0201dbac" variableName="httpStatus"/>
+				<set-payload value='#[output application/json --- { "message" : "Resource not found"}]' doc:name="error message" doc:id="77382cd4-64d7-4e99-855c-18cb6e6225c4" />
+			</when>
+		</choice>
+		<logger level="DEBUG" doc:name="end logger" doc:id="387b8266-26a9-41eb-9a5d-a6e351629962" message="contact-cummnication-update-impl end"/>
+
+	<error-handler name="response-error-handler" doc:id="85c8a151-0fe7-4a9c-ba4b-3ec28b29a2c8" >
+		<on-error-continue enableNotifications="false" logException="false" doc:name="return error message" doc:id="10c5a5bc-acdc-4aa3-b45b-b8383b2812d6">
+				<flow-ref doc:name="common-error" doc:id="0a83c17f-4dd3-4f0a-b30e-bfb68af8ff6a" name="common-error" />
+
+			</on-error-continue>
+	</error-handler>
+
+</flow>
+
+	<flow name="contact-cummnication-delete-impl" doc:id="fc4e6be3-64a0-475e-b8b0-7c7342588c6e" >
+	<logger level="DEBUG" doc:name="start logger" doc:id="217eec50-fe48-4255-bd63-8e3b8e61d7df" message="contact-cummnication-delete-impl start"/>
+	<flow-ref doc:name="db-contact-cummnication-delete" doc:id="3e0f53f0-6c31-4b2b-a88a-5a87939bb671" name="db-contact-cummnication-delete"/>
+		<choice doc:name="is deleted" doc:id="fa83b61c-746f-4ef8-a171-b544d312888a" >
+			<when expression="#[0 == payload]">
+				<set-variable value="404" doc:name="status 404" doc:id="a1648d94-e0be-4240-954b-004710263e71" variableName="httpStatus"/>
+				<set-payload value='#[output application/json --- { "message" : "Resource not found"}]' doc:name="error message" doc:id="d429583f-ff80-4002-afa7-c63a5d78b47d" />
+			</when>
+		</choice>
+		<logger level="DEBUG" doc:name="end logger" doc:id="5533403a-d57c-4a30-85a7-710fc82444d0" message="contact-cummnication-delete-impl end"/>
+
+	<error-handler name="response-error-handler" doc:id="89c87d77-6ed2-4f55-87ab-906db2234ab4" >
+		<on-error-continue enableNotifications="false" logException="false" doc:name="return error message" doc:id="caa6c428-aa49-4a3a-a75e-4649f6d76b6b">
+				<flow-ref doc:name="common-error" doc:id="8c248db9-0b18-44d7-93d3-bd12ac51465c" name="common-error" />
+
+			</on-error-continue>
+	</error-handler>
+
+</flow>
+
+	</mule>

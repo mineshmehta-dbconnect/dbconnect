@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<db:config name="contactdb-config" doc:name="Database Config" doc:id="97b134b3-4501-453c-8ab9-a4ac92209ad3" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.name}" />
+	</db:config>
+  	<api-gateway:autodiscovery apiId="${api.id}" doc:name="API Autodiscovery" doc:id="63534e47-bfc4-4f5a-9a35-aa021330a8dc" flowRef="dbcontact-main" />
+ 
+	<tls:context name="dbcontact-tls-config" doc:name="TLS Context" doc:id="f059cbb2-ecc8-4b06-8c0e-0017f1fd01fd" >
+		<tls:key-store type="jks" path="keystore.jks" keyPassword="password" password="password" />
+	</tls:context>
+	<sub-flow name="common-error" doc:id="f506e5ed-82a5-4f93-81df-7e5f2325eb3e" >
+		<logger level="ERROR" doc:name="Logger" doc:id="f20a9636-e918-45cb-8afa-60f8a46ba835" message="#[output application/json --- error]" />
+		<set-variable value="500" doc:name="httpStatus" doc:id="8fd48a70-efa0-4bbd-ab1e-08ee780b3321" variableName="httpStatus" />
+		<set-payload value='#[output application/json --- {"errorMessage": "server error. please contact administrator."}]' doc:name="common error message" doc:id="c50a0732-3cb6-40c8-9564-fb43f0a370da" />
+	</sub-flow>
+</mule>

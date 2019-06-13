@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="db-contact-address-select-all" doc:id="452b656b-435a-4031-ad40-7235c9902343" >
+		<logger level="DEBUG" doc:name="start logger" doc:id="bd23b2b1-802d-4984-bd24-3ade9babd470" message="db-contact-address-select-all start"/>
+		<db:select doc:name="select all contact address" doc:id="c5327185-faa8-4b93-bf0e-703c03a00ae8" config-ref="contactdb-config">
+			<db:sql >SELECT `contactAddress`.`id`,
+    `contactAddress`.`contactId`,
+    `contactAddress`.`type`,
+    `contactAddress`.`number`,
+    `contactAddress`.`street`,
+    `contactAddress`.`unit`,
+    `contactAddress`.`city`,
+    `contactAddress`.`state`,
+    `contactAddress`.`zipcode`
+FROM `contactAddress`
+WHERE `contactAddress`.`contactId` = :contactId;</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'contactId' : vars.contactId
+}]]]></db:input-parameters>
+		</db:select>
+		<logger level="DEBUG" doc:name="end logger" doc:id="38b8413c-34ac-483b-a9de-9fc331fe888c" message="db-contact-address-select-all end"/>
+	
+</flow>
+	<flow name="db-contact-address-select" doc:id="20181522-2512-489d-ae5e-ac84eb9a0b18" >
+		<logger level="DEBUG" doc:name="start logger" doc:id="79c8594f-3a3e-4533-9bd8-aa851beebbd7" message="db-contact-address-select start"/>
+		<db:select doc:name="select contact" doc:id="79198a6f-8367-47c6-b3a4-6d7d480875a3" config-ref="contactdb-config">
+			<db:sql >SELECT `contactAddress`.`id`,
+    `contactAddress`.`contactId`,
+    `contactAddress`.`type`,
+    `contactAddress`.`number`,
+    `contactAddress`.`street`,
+    `contactAddress`.`unit`,
+    `contactAddress`.`city`,
+    `contactAddress`.`state`,
+    `contactAddress`.`zipcode`
+FROM `contactAddress`
+WHERE `contactAddress`.`id`= :contactAddressId and `contactAddress`.`contactId` = :contactId ;</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'contactId' : vars.contactId,
+'contactAddressId': vars.contactAddressId
+}]]]></db:input-parameters>
+		</db:select>
+		<logger level="DEBUG" doc:name="end logger" doc:id="d0582484-681f-4067-b835-8e6d6e7ec676" message="db-contact-address-select end"/>
+</flow>
+
+
+	<flow name="db-contact-address-create" doc:id="93490c2b-9322-442d-a259-ae8016671557" >
+		<logger level="DEBUG" doc:name="start logger" doc:id="559a69f5-97fe-442e-b59c-e25c9a9697c0" message="db-contact-address-create start"/>
+		<db:insert doc:name="insert contact address" doc:id="7c27bf1b-48c7-47d9-a2e2-dbcc1b9a539e" config-ref="contactdb-config" autoGenerateKeys="true">
+			<db:sql >INSERT INTO `contactAddress` (`contactId`, `type`, `number`, `street`, `unit`, `city`, `state`,`zipcode`, `created`, `modified`, `createdBy`, `modifyBy`)
+VALUES (:contactId, :type, :number, :street, :unit,:city,:state,:zipcode, sysdate(), sysdate(), 'muleApp', 'muleApp');</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'contactId': vars.contactId,
+'type': payload.'type',
+'number': payload.'number',
+'street': payload.street,
+'unit': payload.unit,
+'city': payload.city,
+'state': payload.state,
+'zipcode': payload.zipcode
+}]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names >
+				<db:auto-generated-keys-column-name value="id" />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+		<logger level="DEBUG" doc:name="end logger" doc:id="96695d53-9658-45bc-83fd-971f6f37381f" message="db-contact-address-create end"/>
+	
+</flow>
+
+
+	<flow name="db-contact-address-update" doc:id="50d092b3-49c4-46ab-818b-4f8a3d1a8520" >
+		<logger level="DEBUG" doc:name="start logger" doc:id="844e9a21-db9e-4ec9-a31c-2cebbffbf1fb" message="db-contact-address-update start"/>
+		<db:update doc:name="update contact address" doc:id="52f0d741-358d-4058-9d51-4b5c3e52a0b5" config-ref="contactdb-config">
+			<db:sql >UPDATE  `contactAddress` 
+set `type` =  :type
+, `number` = :number
+, `street` = :street
+, `unit` = :unit
+, `city` = :city
+, `state` = :state
+, `zipcode` = :zipcode
+, `modified` =  sysdate()
+, `modifyBy` = 'muleApp'
+where id = :contactAddressId 
+and `contactId` = :contactId </db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'contactId': vars.contactId,
+'type': payload.'type',
+'number': payload.'number',
+'street': payload.street,
+'unit': payload.unit,
+'city': payload.city,
+'state': payload.state,
+'zipcode': payload.zipcode,
+'contactAddressId' : vars.contactAddressId
+}]]]></db:input-parameters>
+		</db:update>
+		<logger level="DEBUG" doc:name="end logger" doc:id="6ad87ff8-768a-4e81-8728-7608f5a852d2" message="db-contact-address-update end"/>
+	
+</flow>
+
+
+	<flow name="db-contact-address-delete" doc:id="16254c1b-f23f-4115-89b5-a9a94535a25a" >
+		<logger level="DEBUG" doc:name="start logger" doc:id="e45e623a-d090-43db-86b2-9abf8f1d88b1" message="db-contact-address-delete start"/>
+		<db:delete doc:name="delete contact address" doc:id="7a44091c-916b-4473-949d-832d6c7c2ac2" config-ref="contactdb-config">
+			<db:sql >DELETE FROM  `contactAddress`  where id = :contactAddressId and contactId=:contactId</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'contactId' : vars.contactId,
+'contactAddressId': vars.contactAddressId
+}]]]></db:input-parameters>
+		</db:delete>
+		<logger level="DEBUG" doc:name="end logger" doc:id="b63777d3-3d82-494d-b4b9-826aca050def" message="db-contact-address-delete end"/>
+	
+</flow>
+
+
+</mule>
