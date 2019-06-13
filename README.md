@@ -16,7 +16,7 @@ The ER diagram describes the database table structure and the relationship and t
 	Database table creation script: Create_contact_tables.sql  
 
 
-Security: The API is protected with the ** Basic Authentication. **  
+Security: The API is protected with the **Basic Authentication.**  
 Please send me an email to get the credentials. mineshmehta+dbcontact@gmail.com   
 
 
